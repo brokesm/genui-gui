@@ -1,6 +1,5 @@
 import { Col, Row } from 'reactstrap';
 import { CompoundListFromAPI } from '../../../index';
-import React from 'react';
 
 export default function MolsInMolSetList(props) {
   const molset = props.molset;

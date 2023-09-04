@@ -19,7 +19,7 @@ class SimplePaginator extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.props.forceUpdate || (this.props.items.length !== prevProps.items.length)) {
+    if (this.props.forceUpdate || this.props.items.length !== prevProps.items.length) {
       this.setState({
         activePage: 1,
         pageItems: this.props.items.slice(0, this.props.itemsPerPage)
@@ -35,7 +35,8 @@ class SimplePaginator extends React.Component {
       pageItems: pageItems,
       activePage: pageNumber
     });
-    smoothScrollToTop();
+    //smoothScrollToTop();
+    //this.props.topRef.scrollIntoView()
   }
 
   render() {
@@ -46,6 +47,7 @@ class SimplePaginator extends React.Component {
             activePage={this.state.activePage}
             totalItemsCount={this.props.items.length}
             pageRangeDisplayed={5}
+            itemsCountPerPage={this.props.itemsPerPage}
             onChange={this.handlePageChange.bind(this)}
             itemClass="page-item"
             linkClass="page-link"

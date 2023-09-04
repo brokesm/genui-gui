@@ -32,12 +32,20 @@ export class ProjectCard extends React.Component {
             {this.project.description}
           </p>
         </CardBody>
-        <CardFooter>
-          <Button color="success" onClick={() => {
-            this.props.openProject(this.project);
-          }}>Open</Button> <Button color="danger"
-                                   onClick={() => this.props.deleteProject(this.project)}>Delete</Button>
-        </CardFooter>
+          <CardFooter>
+              <Button
+                color="success"
+                onClick={() => this.props.openProject(this.project)}
+              >
+                Open
+              </Button>{" "}
+              <Button
+                color="danger"
+                onClick={() => this.props.deleteProject(this.project)}
+              >
+                Delete
+              </Button>
+          </CardFooter>
       </React.Fragment>
     );
   }

@@ -8,6 +8,8 @@ import ChEMBLCardNew from './chembl/ChEMBLCardNew';
 import GeneratedCardNew from './generated/GeneratedCardNew';
 import SDFCardNew from './sdf/SDFCardNew';
 import CSVCardNew from './csv/CSVCardNew';
+import Search from '../../../genui/components/search/Search';
+//import SearchDropDown from '../../../genui/components/search/SearchDropDown';
 
 class Compounds extends React.Component {
 
@@ -19,6 +21,18 @@ class Compounds extends React.Component {
             newComponents: [{
                 label: "New",
                 component: ChEMBLCardNew
+            },{
+                label:"Similarity",
+                component:Search,
+                isSearch:true
+            },{
+                label:"Substructure",
+                component:Search,
+                isSearch:true
+            },{
+                label:"SMARTS",
+                component:Search,
+                isSearch:true
             }],
             listComponent: ChEMBLCard,
         },
@@ -28,6 +42,18 @@ class Compounds extends React.Component {
             newComponents:[{
               label: "New",
               component: GeneratedCardNew
+            },{
+                label:"Similarity",
+                component:Search,
+                isSearch:true
+            },{
+                label:"Substructure",
+                component:Search,
+                isSearch:true
+            },{
+                label:"SMARTS",
+                component:Search,
+                isSearch:true
             }],
             listComponent: GeneratedCard
         },
@@ -37,6 +63,18 @@ class Compounds extends React.Component {
             newComponents: [{
               label: "New",
               component: SDFCardNew
+            },{
+                label:"Similarity",
+                component:Search,
+                isSearch:true
+            },{
+                label:"Substructure",
+                component:Search,
+                isSearch:true
+            },{
+                label:"SMARTS",
+                component:Search,
+                isSearch:true
             }],
             listComponent: SDFCard,
         },
@@ -47,6 +85,18 @@ class Compounds extends React.Component {
             newComponents: [{
               label: "New",
               component: CSVCardNew
+            },{
+                label:"Similarity",
+                component:Search,
+                isSearch:true
+            },{
+                label:"Substructure",
+                component:Search,
+                isSearch:true
+            },{
+                label:"SMARTS",
+                component:Search,
+                isSearch:true
             }],
             listComponent: CSVCard
         }

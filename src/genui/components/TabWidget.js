@@ -1,82 +1,105 @@
-import React, {Component} from 'react';
+import { useState } from 'react';
 import classnames from 'classnames';
-import {
-  TabContent,
-  TabPane,
-  Nav,
-  NavItem,
-  NavLink,
-  Card,
-} from 'reactstrap';
+import Search from './search/Search';
+import { TabContent, TabPane, Nav, NavItem, NavLink, Card } from 'reactstrap';
 
-class TabWidget extends Component {
-  constructor(props) {
-    super(props);
+function TabWidget(props) {
+  const defaultTab = props.activeTab ?? props.tabs?.[0]?.title ?? '';
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
-    this.toggle = this.toggle.bind(this);
-    this.state = {
-      activeTab: this.props.activeTab
-    };
+  const searchTabs = ['Similarity', 'Substructure', 'SMARTS'];
+  const emptyTriplet = { open: false, response: {}, smiles: null };
+
+  const [triplets, setTriplets] = useState(() => {
+    return searchTabs.reduce(
+      (acc, tab) => ({
+        ...acc,
+        [tab]: emptyTriplet,
+      }),
+      {}
+    );
+  });
+
+  function triplet(tabTitle) {
+    return triplets[tabTitle];
   }
 
-  toggle(tab) {
-    if (this.state.activeTab !== tab) {
-      this.setState({
-        activeTab: tab
-      });
-    }
+  function setTriplet(tabTitle, update) {
+    setTriplets((prev) => ({ ...prev, [tabTitle]: { ...prev[tabTitle], ...update } }));
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.props.activeTab && (prevProps.activeTab !== this.props.activeTab)) {
-      this.toggle(this.props.activeTab);
-    }
+  function openOnlyOnFirstVisit(tabTitle) {
+    if (!searchTabs.includes(tabTitle)) return;
+
+    setTriplets((prev) => {
+      const curr = prev[tabTitle];
+      const noResponseYet = !curr.response || Object.keys(curr.response).length === 0;
+
+      if (noResponseYet && !curr.open) {
+        return { ...prev, [tabTitle]: { ...curr, open: true } };
+      }
+      return prev;
+    });
   }
 
-  render() {
-    const tabs = this.props.tabs;
-    let activeTab = tabs.find(tab => tab.title === this.state.activeTab);
-    if (!activeTab) {
-      activeTab = tabs[0]
-    }
-    if (!activeTab) {
-      throw new Error("No valid active tab found. Make sure to specify it in a prop or in the state.");
-    }
-    activeTab = activeTab.title;
+  if (props.activeTab && activeTab !== props.activeTab) {
+    setActiveTab(props.activeTab);
+  }
 
-    return (
+  return (
+    <>
       <Card body className="stretch-to-container unDraggable">
         <div className="full-bleed">
           <Nav tabs>
-            {
-              tabs.map(tab => (
-                <NavItem key={tab.title}>
-                  <NavLink
-                    className={classnames({ active: activeTab === tab.title })}
-                    onClick={() => { this.toggle(tab.title); }}
-                  >
-                    {tab.title}
-                  </NavLink>
-                </NavItem>
-              ))
-            }
+            {props.tabs.map((tab) => (
+              <NavItem key={tab.title}>
+                <NavLink
+                  className={classnames({ active: activeTab === tab.title })}
+                  onClick={() => {
+                    setActiveTab(tab.title);
+                    openOnlyOnFirstVisit(tab.title);
+                  }}
+                  key={tab.title}
+                >
+                  {tab.title}
+                </NavLink>
+              </NavItem>
+            ))}
           </Nav>
           <TabContent activeTab={activeTab}>
-            {
-              tabs.map(tab => {
-                const Component = tab.renderedComponent;
-                return (
-                  <TabPane key={tab.title} tabId={tab.title}>
-                    <Component {...this.props}/>
-                  </TabPane>
-                )
-              })
-            }
+            {props.tabs.map((tab) => {
+              const Component = tab.renderedComponent;
+              const isSearch = tab?.isSearch
+              return (
+                <TabPane key={tab.title} tabId={tab.title}>
+                  {isSearch ? (
+                    <Search
+                      {...props}
+                      providers={Object.keys(props.compoundSets)
+                        .map((type) => props.compoundSets[type]
+                        .filter((set) => set.id === props.item.id))
+                        .reduce((acc, curr) => [...acc, ...curr], [])}
+                      mode={tab.title.toLowerCase()}
+                      open={triplet(tab.title).open}
+                      setOpen={(open) => setTriplet(tab.title, { open })}
+                      response={triplet(tab.title).response}
+                      setResponse={(response) => setTriplet(tab.title, { response })}
+                      smiles={triplet(tab.title).smiles}
+                      setSmiles={(smiles) => setTriplet(tab.title, { smiles })}
+                      searchAccrossMultipleSets={false}
+                      scope={"set"}
+                    />
+                  ) : (
+                    <Component {...props} />
+                  )}
+                </TabPane>
+              );
+            })}
           </TabContent>
         </div>
       </Card>
-    )
-  }
+    </>
+  );
 }
 
 export default TabWidget;

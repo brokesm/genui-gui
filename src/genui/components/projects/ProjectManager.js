@@ -21,7 +21,8 @@ export default function ProjectManager(props) {
   }
 
   const deleteProject = (project, callback) => {
-    fetch(new URL(project.id, props.projectListURL), {method: 'DELETE', credentials: "include"}).then((response) => {
+    // trailing slash incompatibility
+    fetch(props.projectListURL + `${project.id}/`, {method: 'DELETE', credentials: "include"}).then((response) => {
       if (response.ok) {
         if (project_id && (project.id.toString() === project_id.toString())) {
           setProject(null);

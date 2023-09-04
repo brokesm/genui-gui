@@ -2,6 +2,7 @@ import React from "react";
 import { Button, CardBody, CardFooter, CardHeader, CardSubtitle } from 'reactstrap';
 import {ExportMolSet, TabWidget} from '../../index';
 import MolSetTasks from "./MolSetTasks";
+import Search from "../search/Search.js";
 
 class GenericMolSetCard extends React.Component {
   abort = new AbortController();
@@ -77,6 +78,10 @@ class GenericMolSetCard extends React.Component {
       return <div>Fetching...</div>
     }
 
+    // const molSetTypes = Object.keys(this.props.compoundSets)
+    // const currentType = molSetTypes.filter(type => this.props.compoundSets[type].some(ms => ms.id === molset.id))
+    // const data = this.props.compoundSets[currentType].filter(ms => ms.id === molset.id)
+
     const created = new Date(this.state.molset.created);
     const updated = new Date(this.state.molset.updated);
     const molsetURL = new URL(`${this.state.molset.id}/`, this.props.molsetListUrl);
@@ -109,7 +114,23 @@ class GenericMolSetCard extends React.Component {
             tabs={this.props.tabs.concat([{
               title: "Export",
               renderedComponent: props => <ExportMolSet {...props}/>
-            }])}
+            },
+            {
+              title: "Similarity",
+              renderedComponent:Search,
+              isSearch:true
+            },
+            {
+              title: "Substructure",
+              renderedComponent:Search,
+              isSearch:true
+            },
+            {
+              title: "SMARTS",
+              renderedComponent:Search,
+              isSearch:true
+            }
+          ])}
             molsetIsUpdating={isUpdating}
             moleculesURL={moleculesURL}
             molsetUURL={molsetURL}

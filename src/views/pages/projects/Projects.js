@@ -1,148 +1,191 @@
-import React, { Component } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, DropdownItem, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
 import { ResponsiveGrid } from '../../../genui/';
 import { CreateNewCard } from './CreateNewCard';
 import { ProjectCard } from './ProjectCard';
+import Search from '../../../genui/components/search/Search';
+import SearchDropDown from '../../../genui/components/search/SearchDropDown';
 
 function HeaderNav(props) {
-    return (<UncontrolledDropdown nav inNavbar>
+  return (
+    <>
+      <SearchDropDown {...props} />
+      <UncontrolledDropdown nav inNavbar>
         <DropdownToggle nav caret>
           Actions
         </DropdownToggle>
         <DropdownMenu>
-          <DropdownItem onClick={() => document.getElementById("new-proj-card").scrollIntoView()}>New Project</DropdownItem>
+          <DropdownItem onClick={() => document.getElementById('new-proj-card').scrollIntoView()}>
+            New Project
+          </DropdownItem>
           <DropdownItem divider />
-            <UncontrolledDropdown>
-                <DropdownToggle nav>Open...</DropdownToggle>
-                <DropdownMenu>
-                    {
-                        props.projects.map(project =>
-                            (<DropdownItem
-                                key={project.id}
-                                onClick={() => {props.openProject(project)}}
-                            >
-                                {project.name}
-                            </DropdownItem>)
-                        )
-                    }
-                </DropdownMenu>
-            </UncontrolledDropdown>
+          <UncontrolledDropdown>
+            <DropdownToggle nav>Open...</DropdownToggle>
+            <DropdownMenu>
+              {props.projects.map((project) => (
+                <DropdownItem
+                  key={project.id}
+                  onClick={() => {
+                    props.openProject(project);
+                  }}
+                >
+                  {project.name}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </UncontrolledDropdown>
         </DropdownMenu>
-      </UncontrolledDropdown>)
+      </UncontrolledDropdown>
+    </>
+  );
 }
 
-class Projects extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            projects : []
-            , creating : false
-            , isLoading : true
-        }
-    }
+function Projects(props) {
+  const [projects, setProjects] = useState([]);
+  const [creating, setCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [mode, setMode] = useState('');
+  const [open, setOpen] = useState(false);
+  const [response, setResponse] = useState({});
+  const [smiles, setSmiles] = useState(null)
 
-    componentDidMount() {
-        this.fetchUpdates();
-    }
+  function reset() {
+    setResponse({})
+    setSmiles(null)
+  }
 
-    fetchUpdates = () => {
-      fetch(this.props.apiUrls.projectList, {
-        credentials: "include",
-        "headers": {
-          "Accept": "application/json",
-        },
-        "method": "GET"
-      })
-        .then(response => response.json())
-        .then(this.updateProjectRoutes)
-    };
+  function onSimilarity() {
+    setMode('similarity');
+    setOpen(true);
+    reset()
+  }
 
-    updateProjectRoutes = (data) => {
-        const projects = [];
-        data.forEach(
-            (project) => {
-              const url = '/projects/' + project.id + '/';
-              projects.push(Object.assign({url : url}, project))
-            }
-        );
+  function onSubstructure() {
+    setMode('substructure');
+    setOpen(true);
+    reset()
+  }
 
-        // this.activateProject(projects[0]);
+  function onSmarts() {
+    setMode('smarts');
+    setOpen(true);
+    reset()
+  }
 
-        this.setState({
-            projects : projects,
-            isLoading : false
-        });
-        this.props.setPageHeader(<HeaderNav {...this.props} projects={projects}/>);
-    };
+  const fetchUpdates = useCallback(() => {
+    fetch(props.apiUrls.projectList, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      method: 'GET',
+    })
+      .then((response) => response.json())
+      .then(updateProjectRoutes);
+  }, [props.apiUrls.projectList]);
 
-    handleCreate = (values) => {
-        this.setState({ creating: true });
-        fetch(
-            this.props.apiUrls.projectList
-            , {
-                method: 'POST'
-                , body: JSON.stringify(values)
-                , headers: {
-                  'Content-Type': 'application/json'
-                },
-                credentials: "include"
-            }
-        ).then(response => response.json()).then(
-            data => {
-              let new_project = Object.assign({url : `/projects/${data.id}`}, data);
-                this.setState({
-                    creating: false
-                });
-                this.props.openProject(new_project);
-            }
-        )
-        ;
-    };
+  useEffect(() => {
+    fetchUpdates();
+  }, [fetchUpdates]);
 
-  render() {
-      if (this.state.isLoading) {
-          return <div>Loading...</div>
-      }
+  function updateProjectRoutes(data) {
+    const projects = [];
+    data.forEach((project) => {
+      const url = '/projects/' + project.id + '/';
+      projects.push(Object.assign({ url: url }, project));
+    });
 
-      const project_cards = this.state.projects.map(project => ({
-              id : project.id,
-              h : {"md" : 3, "sm" : 3},
-              w : {"md" : 1, "sm" : 1},
-              minH : {"md" : 3, "sm" : 3},
-              data : project
-          }));
-      const new_project_card = {
-              id : "new-project",
-              h : {"md" :4, "sm" : 4},
-              w : {"md" : 1, "sm" : 1},
-              minH : {"md" : 4, "sm" : 4},
-              data : {}
-      };
-      // console.log(project_cards.concat(new_project_card));
-      return (
-      this.state.creating ? <div>Loading...</div>: <ResponsiveGrid
+    setProjects(projects);
+    setIsLoading(false);
+
+    props.setPageHeader(
+      <HeaderNav
+        {...props}
+        projects={projects}
+        onSimilarity={onSimilarity}
+        onSubstructure={onSubstructure}
+        onSmarts={onSmarts}
+      />
+    );
+  }
+
+  function handleCreate(values) {
+    setCreating(true);
+    fetch(props.apiUrls.projectList, {
+      method: 'POST',
+      body: JSON.stringify(values),
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        let new_project = Object.assign({ url: `/projects/${data.id}` }, data);
+        setCreating(false);
+        props.openProject(new_project);
+      });
+  }
+
+  const project_cards = projects.map((project) => ({
+    id: project.id,
+    h: { md: 3, sm: 3 },
+    w: { md: 1, sm: 1 },
+    minH: { md: 3, sm: 3 },
+    data: project,
+  }));
+
+  const new_project_card = {
+    id: 'new-project',
+    h: { md: 4, sm: 4 },
+    w: { md: 1, sm: 1 },
+    minH: { md: 4, sm: 4 },
+    data: {},
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <>
+      <Search
+        {...props}
+        providers={projects}
+        mode={mode}
+        open={open}
+        setOpen={setOpen}
+        response={response}
+        setResponse={setResponse}
+        smiles={smiles}
+        setSmiles={setSmiles}
+        scope={"project"}
+      />
+      {creating ? (
+        <div>Loading...</div>
+      ) : (
+        <ResponsiveGrid
           items={project_cards.concat(new_project_card)}
           rowHeight={75}
           mdCols={2}
           smCols={1}
           gridID="projects-grid-layout"
-      >
-          {
-              project_cards.map(item =>
-                  <Card key={item.id.toString()}>
-                      <ProjectCard {...this.props} project={item.data} deleteProject={project => {this.props.deleteProject(project, this.fetchUpdates)}}/>
-                  </Card>
-              ).concat([
-                  (
-                      <Card key="new-project" id="new-proj-card">
-                        <CreateNewCard handleCreate={this.handleCreate} />
-                      </Card>
-                  )
-              ])
-          }
-      </ResponsiveGrid>
-    )
-  }
+        >
+          {project_cards
+            .map((item) => (
+              <Card key={item.id.toString()}>
+                <ProjectCard
+                  {...props}
+                  project={item.data}
+                  deleteProject={(project) => {
+                    props.deleteProject(project, fetchUpdates);
+                  }}
+                />
+              </Card>
+            ))
+            .concat([
+              <Card key="new-project" id="new-proj-card">
+                <CreateNewCard handleCreate={handleCreate} />
+              </Card>,
+            ])}
+        </ResponsiveGrid>
+      )}
+    </>
+  );
 }
 
 export default Projects;

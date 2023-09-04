@@ -1,7 +1,10 @@
 import React from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {Row, Col, ListGroupItem, ListGroup, Container, Button} from "reactstrap";
 import {Card} from "reactstrap";
 import { TaskAwareComponent, TaskBadgeGroup } from '../index';
+import Search from "./search/Search";
 
 function TasksOverview(props) {
     const tasksURL = new URL(`${props.item.id}/tasks/all/`, props.tasksUrlRoot);
@@ -33,9 +36,19 @@ function ListItem(props) {
     componentProps[props.objectProp] = props.item;
     componentProps[props.groupNameProp] = props.groupName;
     componentProps[props.urlProp] = props.groupDefinitions[props.groupName].url;
-
-    const [isOpen, setIsOpen] = React.useState(false);
+    const {isOpen, setIsOpen, molsetRef} = props
+    const location = useLocation()
+    // const [isOpen, setIsOpen] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
+
+    useEffect(() => {
+      if (location?.state) {
+        const targetMolset = location.state.isOpen
+        setIsOpen(targetMolset)
+        console.log(location.state)
+        //molsetRef.current[targetMolset[0]].current.scrollIntoView()
+    }
+    },[location,setIsOpen])
 
     return (
         <Container fluid>
@@ -43,14 +56,19 @@ function ListItem(props) {
                 <Col xs="10" lg="11">
                     <ListGroupItem
                         tag="button"
-                        active={isOpen}
+                        active={isOpen.includes(props.item.id)}
+                        key={props.item.id}
                         action
                         onClick={() => {
-                            setIsOpen(!isOpen);
+                          if (isOpen.includes(props.item.id)) {
+                            setIsOpen(prev => prev.filter(id => id !== props.item.id));
+                          } else {
+                            setIsOpen(prev => [...prev, props.item.id]);
+                          }
                         }}
                     >
-                        <strong>{props.item.name}</strong> |
-                        <TasksOverview {...props} />
+                      <strong ref={molsetRef?.current[props.item.id]}>{props.item.name}</strong> |
+                      <TasksOverview {...props} />
                     </ListGroupItem>
                 </Col>
                 <Col xs="2" lg="1" className='text-center'>
@@ -67,8 +85,8 @@ function ListItem(props) {
                 {/*<Col xs="2" lg="1"></Col>*/}
             </Row>
             {
-                isOpen ? (
-                    <React.Fragment>
+                isOpen.includes(props.item.id) ? (
+                    <div>
                         <br/>
                         <Card>
                           <TaskAwareComponent
@@ -84,7 +102,7 @@ function ListItem(props) {
                             }
                           />
                         </Card>
-                    </React.Fragment>
+                    </div>
                 ) : null
             }
         </Container>
@@ -94,9 +112,14 @@ function ListItem(props) {
 function ObjectList(props) {
     const name = props.groupDefinitions[props.groupName].name;
     const new_components = props.groupDefinitions[props.groupName].newComponents;
-    const [activeNew, setActiveNew] = React.useState(null);
+    const [activeNew, setActiveNew] = useState(null);
+    const [open, setOpen] = useState(false) //search + modal
+    const [isClosed, setIsClosed] = useState(true) // closed menu
+    const [response, setResponse] = useState({})
+    const [smiles, setSmiles] = useState(null)
 
     const componentProps = {};
+    const searchProps = {}
     componentProps[props.groupNameProp] = props.groupName;
     componentProps[props.urlProp] = props.groupDefinitions[props.groupName].url;
     componentProps[props.createProp] = (className, data) => {
@@ -106,6 +129,23 @@ function ObjectList(props) {
     componentProps[props.deleteProp] = props.onDelete;
     componentProps[props.updateProp] = props.onUpdate;
 
+    searchProps.providers = props.objects
+    searchProps.mode = activeNew?.label.toLowerCase()
+    searchProps.open = open
+    searchProps.setOpen = setOpen
+    searchProps.response = response
+    searchProps.setResponse = setResponse
+    searchProps.smiles = smiles
+    searchProps.setSmiles = setSmiles
+    searchProps.setActiveNew = setActiveNew
+    searchProps.scope = "set"
+
+    function reset() {
+      setResponse({})
+      setSmiles(null)
+    }
+
+
     // React.useEffect(() => {
     //   if (props.focusGroup) {
     //     const elmnt = document.getElementById(props.focusGroup);
@@ -113,6 +153,9 @@ function ObjectList(props) {
     //     elmnt.scrollIntoView();
     //   }
     // }, [props.focusGroup])
+
+    // synchronize closed search window with deactivated tab
+    if (isClosed && activeNew !== null) setActiveNew(null)
 
     return (
         <React.Fragment>
@@ -128,8 +171,14 @@ function ObjectList(props) {
                 onClick={(e) => {
                   if (!activeNew || !(item.label === activeNew.label)) {
                     setActiveNew(item);
+                    setIsClosed(false)
+                    setOpen(true)
+                    reset()
                   } else {
                     setActiveNew(null);
+                    setIsClosed(true)
+                    setOpen(false)
+                    reset()
                   }
                 }}>
                 {item.label}
@@ -139,15 +188,16 @@ function ObjectList(props) {
           <hr/>
           <div id={`${props.groupName}-group-list`} className="group-list">
             {
-              activeNew ? (
+              activeNew && (
                 <div>
-                  <Card id={`${props.groupName}-create-card`} style={{
-                    minHeight: '30rem'
-                  }}>
+                  {activeNew.isSearch ? (
+                    <activeNew.component {...props} {...searchProps} />
+                  ) : (
                     <activeNew.component {...props} {...componentProps} />
-                  </Card>
+                  )}
+                    
                 </div>
-              ) : null
+              )
             }
 
             <ListGroup>

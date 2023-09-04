@@ -39,6 +39,7 @@ const fetchBackendRoots = (callback) => {
                 drugexRoot : new URL('drugex/', generatorsURL),
                 mapsRoot: new URL('maps/', REMOTE_API_ROOT),
                 celeryProgress : new URL('tasks/progress/', REMOTE_API_ROOT),
+                searchRoot: new URL('search/', REMOTE_API_ROOT)
             });
         })
         .catch(e => console.log(e))

@@ -51,7 +51,7 @@ class ApiResourcePaginator extends React.Component {
       <React.Fragment>
         <Pagination
           activePage={this.state.activePage}
-          // itemsCountPerPage={this.props.itemsPerPage ? this.props.itemsPerPage : 10}
+          itemsCountPerPage={this.props.itemsPerPage ? this.props.itemsPerPage : 5}
           totalItemsCount={this.state.totalCount}
           pageRangeDisplayed={5}
           onChange={this.handlePageChange.bind(this)}

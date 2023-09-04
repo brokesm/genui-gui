@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { ComponentWithObjects } from '../../index';
 // import { DropdownItem, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
 // import QSARModelCreateCard from '../../../views/pages/models/QSARModelCreateCard';
@@ -53,56 +54,41 @@ import ObjectGroupsList from '../ObjectSelectionList';
 //   </UncontrolledDropdown>)
 // }
 
-class ModelsPage extends React.Component {
-
-  constructor(props) {
-    super(props);
-
-    this.headerComponent = this.props.headerComponent;
-
-    this.state = {
-      selectedToAdd : this.props.selectedToAdd,
-      newModelComponent : this.props.newModelComponent,
-      newCardSetup : this.props.newCardSetup ? this.props.newCardSetup : { // TODO: it would be wiser to store all properties that will be passed to the card component rather than just this
+function ModelsPage(props) {
+  const initNewCardSetUp = props.newCardSetup ? props.newCardSetup : { 
         h : {"md" : 15, "sm" : 15},
         w : {"md" : 1, "sm" : 1},
         minH : {"md" : 3, "sm" : 3},
-      },
-      cardSetup : this.props.cardSetup ? this.props.cardSetup : { // TODO: it would be wiser to store all properties that will be passed to the card component rather than just this
+      }
+  const initCardSetUp = props.cardSetup ? props.cardSetup : { 
         h : {"md" : 12, "sm" : 12},
         w : {"md" : 1, "sm" : 1},
         minH : {"md" : 3, "sm" : 3},
       }
-    }
+  const headerComponent = props.headerComponent
+  const modelClass = Object.keys(props.definitions)[0];
+  const [selectedToAdd, setSelectedToAdd] = useState(props.selectedToAdd)
+  const [newModelComponent, setNewModelComponent] = useState(props.newModelComponent)
+  const [newCardSetup, setNewCardSetup] = useState(initNewCardSetUp)
+  const [cardSetup, setCardSetup] = useState(initCardSetUp)
+  const [isOpen, setIsOpen] = useState([])
+
+  function handleAddNew(model, newModelComponent, cardSetup) {
+    setSelectedToAdd(model)
+    setNewModelComponent(prev => newModelComponent !== prev ? newModelComponent : prev)
+    setNewCardSetup(prev => cardSetup !== prev ? cardSetup : prev)
   }
-
-  handleAddNew = (model, newModelComponent, cardSetup) => {
-    this.setState((prevState) => {
-      return {
-        selectedToAdd : model,
-        newModelComponent : newModelComponent ? newModelComponent : prevState.newModelComponent,
-        newCardSetup : cardSetup ? cardSetup : prevState.newCardSetup,
-      }
-    })
-  };
-
-  // componentDidMount() {
-  //   this.props.setPageHeader(<HeaderNav {...this.props} addChoices={this.props.algorithmChoices} onModelAdd={this.handleAddNew}/>);
-  // }
-
-  render() {
-    const modelClass = Object.keys(this.props.definitions)[0];
-    return (
-      <div className="models-page">
+  return (
+    <div className="models-page">
         <ComponentWithObjects
-          {...this.props}
+          {...props}
           emptyClassName={modelClass}
-          objectListURL={this.props.definitions[modelClass].url}
+          objectListURL={props.definitions[modelClass].url}
           render={
             (models, handleAddModelList, handleAddModel, handleModelDelete, handleModelUpdate) => {
               return <ObjectGroupsList
-                {...this.props}
-                chosenAlgorithm={this.props.algorithmChoices.length === 1 ? this.props.algorithmChoices[0] : null}
+                {...props}
+                chosenAlgorithm={props.algorithmChoices.length === 1 ? props.algorithmChoices[0] : null}
                 models={models[modelClass]}
                 id="models-list"
                 objects={models}
@@ -116,15 +102,91 @@ class ModelsPage extends React.Component {
                 onDelete={handleModelDelete}
                 onUpdate={handleModelUpdate}
                 focusGroup={modelClass}
-                tasksUrlRoot={this.props.definitions[modelClass].url}
-                groupDefinitions={this.props.definitions}
+                tasksUrlRoot={props.definitions[modelClass].url}
+                groupDefinitions={props.definitions}
+                isOpen={isOpen}
+                setIsOpen={setIsOpen}
               />
             }
           }
         />
       </div>
-    );
-  }
+  )
 }
+
+
+// class ModelsPage extends React.Component {
+
+//   constructor(props) {
+//     super(props);
+
+//     this.headerComponent = this.props.headerComponent;
+
+//     this.state = {
+//       selectedToAdd : this.props.selectedToAdd,
+//       newModelComponent : this.props.newModelComponent,
+//       newCardSetup : this.props.newCardSetup ? this.props.newCardSetup : { // TODO: it would be wiser to store all properties that will be passed to the card component rather than just this
+//         h : {"md" : 15, "sm" : 15},
+//         w : {"md" : 1, "sm" : 1},
+//         minH : {"md" : 3, "sm" : 3},
+//       },
+//       cardSetup : this.props.cardSetup ? this.props.cardSetup : { // TODO: it would be wiser to store all properties that will be passed to the card component rather than just this
+//         h : {"md" : 12, "sm" : 12},
+//         w : {"md" : 1, "sm" : 1},
+//         minH : {"md" : 3, "sm" : 3},
+//       }
+//     }
+//   }
+
+//   handleAddNew = (model, newModelComponent, cardSetup) => {
+//     this.setState((prevState) => {
+//       return {
+//         selectedToAdd : model,
+//         newModelComponent : newModelComponent ? newModelComponent : prevState.newModelComponent,
+//         newCardSetup : cardSetup ? cardSetup : prevState.newCardSetup,
+//       }
+//     })
+//   };
+
+//   // componentDidMount() {
+//   //   this.props.setPageHeader(<HeaderNav {...this.props} addChoices={this.props.algorithmChoices} onModelAdd={this.handleAddNew}/>);
+//   // }
+
+//   render() {
+//     const modelClass = Object.keys(this.props.definitions)[0];
+//     return (
+//       <div className="models-page">
+//         <ComponentWithObjects
+//           {...this.props}
+//           emptyClassName={modelClass}
+//           objectListURL={this.props.definitions[modelClass].url}
+//           render={
+//             (models, handleAddModelList, handleAddModel, handleModelDelete, handleModelUpdate) => {
+//               return <ObjectGroupsList
+//                 {...this.props}
+//                 chosenAlgorithm={this.props.algorithmChoices.length === 1 ? this.props.algorithmChoices[0] : null}
+//                 models={models[modelClass]}
+//                 id="models-list"
+//                 objects={models}
+//                 objectProp="model"
+//                 groupNameProp="modelClass"
+//                 urlProp="listURL"
+//                 createProp="handleCreate"
+//                 deleteProp="onModelDelete"
+//                 updateProp="onModelUpdate"
+//                 onCreate={handleAddModel}
+//                 onDelete={handleModelDelete}
+//                 onUpdate={handleModelUpdate}
+//                 focusGroup={modelClass}
+//                 tasksUrlRoot={this.props.definitions[modelClass].url}
+//                 groupDefinitions={this.props.definitions}
+//               />
+//             }
+//           }
+//         />
+//       </div>
+//     );
+//   }
+// }
 
 export default ModelsPage;
