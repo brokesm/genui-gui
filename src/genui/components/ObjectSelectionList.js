@@ -43,10 +43,11 @@ function ListItem(props) {
 
     useEffect(() => {
       if (location?.state) {
-        const targetMolset = location.state.isOpen
-        setIsOpen(targetMolset)
-        console.log(location.state)
-        //molsetRef.current[targetMolset[0]].current.scrollIntoView()
+        const providerMolsets = location.state.isOpen
+        const relevantProviders = providerMolsets.filter((prov) => Object.keys(molsetRef.current).includes(prov.toString()))
+        setIsOpen(relevantProviders)
+        // if compound present in two or more sets within project, scroll to the first one in the array
+        molsetRef.current[relevantProviders[0]].current.scrollIntoView()
     }
     },[location,setIsOpen])
 

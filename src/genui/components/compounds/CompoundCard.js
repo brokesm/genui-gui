@@ -1,17 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MoleculePic } from './details/MoleculeImage';
-import {
-  CardImg,
-  Col,
-  Row,
-  Card,
-  CardBody,
-  Nav,
-  NavLink,
-  NavItem,
-  Spinner
-} from 'reactstrap';
-import { useNavigate } from 'react-router-dom';
+import { CardImg, Col, Row, Card, CardBody, Nav, NavLink, NavItem, Spinner } from 'reactstrap';
+import { useNavigate, Link } from 'react-router-dom';
 
 export function CompoundCardRow(props) {
   const { property, children } = props;
@@ -49,34 +39,34 @@ function CompoundCardContainer(props) {
   );
 }
 
-function NavigateButton(props) {
+// function NavigateButton(props) {
 
-  const { setIsOpen, isOpen, scope, provider, children, molsetRef, modalId } = props;
-  const navigate = useNavigate();
-  return (
-    <button
-      style={{
-        background: 'transparent',
-        cursor: 'pointer',
-        textDecoration: 'underline',
-        color: '#069',
-        border: 'none',
-        padding: 0,
-      }}
-      onClick={() => {
-        if (scope === 'project') {
-          props.setModalOpen(prev => ({...prev, [modalId]:false}))
-          navigate('/projects/' + provider.id + '/compounds', { state: { isOpen: isOpen } });
-        } else {
-          setIsOpen((prev) => [...prev, provider.id]);
-          molsetRef.current[provider.id].current.scrollIntoView();
-        }
-      }}
-    >
-      {children}
-    </button>
-  );
-}
+//   const { setIsOpen, isOpen, scope, provider, children, molsetRef, modalId } = props;
+//   const navigate = useNavigate();
+//   return (
+//     <button
+//       style={{
+//         background: 'transparent',
+//         cursor: 'pointer',
+//         textDecoration: 'underline',
+//         color: '#069',
+//         border: 'none',
+//         padding: 0,
+//       }}
+//       onClick={() => {
+//         if (scope === 'project') {
+//           props.setModalOpen(prev => ({...prev, [modalId]:false}))
+//           navigate('/projects/' + provider.id + '/compounds', { state: { isOpen: isOpen } });
+//         } else {
+//           setIsOpen((prev) => [...prev, provider.id]);
+//           molsetRef.current[provider.id].current.scrollIntoView();
+//         }
+//       }}
+//     >
+//       {children}
+//     </button>
+//   );
+// }
 
 export function A({ href, children }) {
   return (
@@ -87,7 +77,8 @@ export function A({ href, children }) {
 }
 
 export function InfoCard(props) {
-  const { mol, providers, scope, mode, setIsOpen } = props;
+  const { mol, providers, scope, mode, setIsOpen, molsetRef } = props;
+  const navigate = useNavigate()
   //const info = Object.keys(mol).filter((key) => typeof mol[key] !== 'object' && !Array.isArray(mol[key]));
 
   const info = ['smiles', 'inchi', 'inchiKey'];
@@ -107,7 +98,7 @@ export function InfoCard(props) {
       return word.charAt(0).toUpperCase() + word.slice(1);
     }
   }
-
+  
   return (
     <CompoundCardContainer {...props}>
       {info.map((prprty) => (
@@ -118,16 +109,26 @@ export function InfoCard(props) {
           .filter((prov) => mol[providerArray].includes(prov.id))
           .map((prov) => (
             <>
-              <NavigateButton
-                {...props}
-                provider={prov}
-                scope={scope}
-                isOpen={scope === 'project' && mol.providers}
-                setIsOpen={setIsOpen}
-                modalId={mol.id}
+              <Link
+                to={scope === "project" && '/projects/' + prov.id + '/compounds'}
+                state={scope === 'project' && { isOpen: scope === 'project' && mol.providers }}
+                style={{
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  color: '#069',
+                  border: 'none',
+                  padding: 0,
+                }}
+                onClick={() => {
+                  if (scope === 'set') {
+                    setIsOpen((prev) => [...prev, prov.id]);
+                    molsetRef.current[prov.id].current.scrollIntoView();
+                  } 
+                }}
               >
                 {prov.name}
-              </NavigateButton>{' '}
+              </Link>{" "}
             </>
           ))}
       </CompoundCardRow>
@@ -325,7 +326,7 @@ export default function CompoundCard(props) {
         tabs={mode === 'info' ? ['Info', 'Details', 'Similars', 'Shared Substructure'] : ['Info', 'Details']}
       />
       {activeTabs[mol.id] === 'Info' && (
-        <InfoCard {...props} mol={mol} scope={scope} providers={providers} mode={mode}/>
+        <InfoCard {...props} mol={mol} scope={scope} providers={providers} mode={mode} />
       )}
       {activeTabs[mol.id] === 'Details' && (
         <DetailsCard {...props} activities={activities} mol={mol} properties={properties} isLoading={isLoading} />
