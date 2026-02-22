@@ -42,12 +42,10 @@ function ListItem(props) {
     const [isDeleting, setIsDeleting] = React.useState(false);
 
     useEffect(() => {
-      if (location?.state) {
-        const providerMolsets = location.state.isOpen
-        const relevantProviders = providerMolsets.filter((prov) => Object.keys(molsetRef.current).includes(prov.toString()))
-        setIsOpen(relevantProviders)
-        // if compound present in two or more sets within project, scroll to the first one in the array
-        molsetRef.current[relevantProviders[0]].current.scrollIntoView()
+      if (location.state && Object.keys(molsetRef.current).includes(location.state.isOpen.toString())) {
+        const setId = location.state.isOpen
+        setIsOpen(prev => [...prev, setId])
+        molsetRef.current[setId].current.scrollIntoView()
     }
     },[location,setIsOpen])
 

@@ -41,11 +41,15 @@ function CompoundsPage(props) {
 
   const molsetRef = useRef(null)
 
-  console.log(molsetRef.current)
+  //console.log(molsetRef.current)
 
   if (molsetScope.length !== 0 && molsetRef.current === null) {
     molsetRef.current = molsetScope.reduce((acc, ms) => ({...acc,[ms.id]:createRef()}), {})
   }
+
+  console.log(molsetScope)
+
+  //console.log(molsetRef.current)
 
   function onMolSetChoice(choice, array) {
     setSelected(choice);

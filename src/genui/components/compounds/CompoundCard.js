@@ -39,34 +39,27 @@ function CompoundCardContainer(props) {
   );
 }
 
-// function NavigateButton(props) {
+function NavigateButton(props) {
 
-//   const { setIsOpen, isOpen, scope, provider, children, molsetRef, modalId } = props;
-//   const navigate = useNavigate();
-//   return (
-//     <button
-//       style={{
-//         background: 'transparent',
-//         cursor: 'pointer',
-//         textDecoration: 'underline',
-//         color: '#069',
-//         border: 'none',
-//         padding: 0,
-//       }}
-//       onClick={() => {
-//         if (scope === 'project') {
-//           props.setModalOpen(prev => ({...prev, [modalId]:false}))
-//           navigate('/projects/' + provider.id + '/compounds', { state: { isOpen: isOpen } });
-//         } else {
-//           setIsOpen((prev) => [...prev, provider.id]);
-//           molsetRef.current[provider.id].current.scrollIntoView();
-//         }
-//       }}
-//     >
-//       {children}
-//     </button>
-//   );
-// }
+  const {children, projectId, setId } = props;
+  const navigate = useNavigate();
+
+  return (
+    <button
+      style={{
+        background: 'transparent',
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        color: '#069',
+        border: 'none',
+        padding: 0,
+      }}
+      onClick={() => navigate('/projects/' + projectId + '/compounds', { state: { isOpen: setId } })}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function A({ href, children }) {
   return (
@@ -77,7 +70,7 @@ export function A({ href, children }) {
 }
 
 export function InfoCard(props) {
-  const { mol, providers, scope, mode, setIsOpen, molsetRef } = props;
+  const { mol, providers, scope, mode } = props;
   const navigate = useNavigate()
   //const info = Object.keys(mol).filter((key) => typeof mol[key] !== 'object' && !Array.isArray(mol[key]));
 
@@ -99,38 +92,26 @@ export function InfoCard(props) {
     }
   }
   
+  
   return (
     <CompoundCardContainer {...props}>
       {info.map((prprty) => (
         <CompoundCardRow property={transformWord(prprty)}>{mol[prprty] ? mol[prprty] : '-'}</CompoundCardRow>
       ))}
       <CompoundCardRow property={'Found in'}>
-        {providers
-          .filter((prov) => mol[providerArray].includes(prov.id))
-          .map((prov) => (
+        {mol?.occurrence ? (mol.occurrence.map(project => (
+          project.providers.map(provider => (
             <>
-              <Link
-                to={scope === "project" && '/projects/' + prov.id + '/compounds'}
-                state={scope === 'project' && { isOpen: scope === 'project' && mol.providers }}
-                style={{
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  color: '#069',
-                  border: 'none',
-                  padding: 0,
-                }}
-                onClick={() => {
-                  if (scope === 'set') {
-                    setIsOpen((prev) => [...prev, prov.id]);
-                    molsetRef.current[prov.id].current.scrollIntoView();
-                  } 
-                }}
+              <NavigateButton
+                {...props}
+                setId={provider.id}
+                projectId={project.id}
               >
-                {prov.name}
-              </Link>{" "}
+                {provider.name + " – " + project.name}
+              </NavigateButton><br/>
             </>
-          ))}
+          ))
+        ))) : (<></>)}
       </CompoundCardRow>
       {Object.keys(mol.extraArgs).map((arg) => (
         <CompoundCardRow property={transformWord(arg)}>
@@ -238,8 +219,9 @@ export default function CompoundCard(props) {
   const [activities, setActivities] = useState([]);
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
   const { mol, activeTabs, setActiveTabs, scope, providers, mode, viewInModal } = props;
+  const [molWithOccurrence, setMolWithOccurrence] = useState(mol)
+
   const options = {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -288,6 +270,7 @@ export default function CompoundCard(props) {
 
     setIsLoading(true);
 
+    // Filter out activities only from the same source?
     const activs = await fetch(props.apiUrls.compoundsRoot + `${compoundId}/activities/`, options)
       .then((response) => response.json())
       .then(async (data) => Promise.all(data.map(fetchExtraArgs)))
@@ -316,20 +299,39 @@ export default function CompoundCard(props) {
     localStorage.setItem(`properties_${compoundId}`, JSON.stringify(compound.properties));
   }
 
+
+  useEffect(() => {
+    async function getOccurrence() {
+      const resp = await fetch(props.apiUrls.searchRoot + "inchikey/", {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        method: 'POST',
+        body: JSON.stringify({
+          input:mol.inchiKey
+        }),
+      })
+
+      const occurrence = await resp.json()
+      setMolWithOccurrence(m => ({...m, occurrence: occurrence.occurrence}))
+    }
+
+    getOccurrence()
+  },[])
+  
   return (
     <>
       <ResultsHeader
-        activeTab={activeTabs[mol.id] ?? 'Info'}
+        activeTab={activeTabs[molWithOccurrence.id] ?? 'Info'}
         onTabChange={onTabChange}
         viewInModal={viewInModal}
-        mol={mol}
+        mol={molWithOccurrence}
         tabs={mode === 'info' ? ['Info', 'Details', 'Similars', 'Shared Substructure'] : ['Info', 'Details']}
       />
-      {activeTabs[mol.id] === 'Info' && (
-        <InfoCard {...props} mol={mol} scope={scope} providers={providers} mode={mode} />
+      {activeTabs[molWithOccurrence.id] === 'Info' && (
+        <InfoCard {...props} mol={molWithOccurrence} scope={scope} providers={providers} mode={mode} />
       )}
-      {activeTabs[mol.id] === 'Details' && (
-        <DetailsCard {...props} activities={activities} mol={mol} properties={properties} isLoading={isLoading} />
+      {activeTabs[molWithOccurrence.id] === 'Details' && (
+        <DetailsCard {...props} activities={activities} mol={molWithOccurrence} properties={properties} isLoading={isLoading} />
       )}
     </>
   );

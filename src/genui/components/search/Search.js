@@ -46,7 +46,7 @@ function Search(props) {
         }),
       });
 
-      const payload = await res.json();
+      let payload = await res.json();
 
       if (!res.ok) {
         const message = `${res.status} ${res.statusText}`;
@@ -63,6 +63,7 @@ function Search(props) {
       if (err.name === 'AbortError') {
         return;
       }
+
       setError(`Error ${err.status}: ${Object.values(err.payload)}`);
     } finally {
       setStatus('drawing');

@@ -204,7 +204,6 @@ export default function CompoundList(props) {
                     providers={modalProviders}
                     mode={modalMode}
                     key={`modal_${mol.id}`}
-                    setModalOpen={setModalOpen}
                   />
                 ))}
             </ModalBody>

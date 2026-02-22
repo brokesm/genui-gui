@@ -30,6 +30,10 @@ class ComponentWithResources extends React.Component {
       // TODO: add a more sophisticated comparison
       this.updateResources();
     }
+    if (this.props.definition?.project?.pathname !== prevProps.definition?.project?.pathname) {
+      this.updateResources();
+    }
+    
   }
 
   updateResources = () => {
