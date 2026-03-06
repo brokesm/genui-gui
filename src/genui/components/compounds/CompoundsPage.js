@@ -33,7 +33,6 @@ function CompoundsPage(props) {
   const [isOpen, setIsOpen] = useState([])
   const [open, setOpen] = useState(false);
   const [response, setResponse] = useState({});
-  const [smiles, setSmiles] = useState(null)
 
   const molsets = props.compoundSets;
   const molsetsEmpty = Object.keys(molsets).length === 0 && molsets.constructor === Object;
@@ -41,15 +40,9 @@ function CompoundsPage(props) {
 
   const molsetRef = useRef(null)
 
-  //console.log(molsetRef.current)
-
   if (molsetScope.length !== 0 && molsetRef.current === null) {
     molsetRef.current = molsetScope.reduce((acc, ms) => ({...acc,[ms.id]:createRef()}), {})
   }
-
-  console.log(molsetScope)
-
-  //console.log(molsetRef.current)
 
   function onMolSetChoice(choice, array) {
     setSelected(choice);
@@ -58,7 +51,6 @@ function CompoundsPage(props) {
 
   function reset() {
     setResponse({})
-    setSmiles(null)
   }
 
   function onSimilarity() {
@@ -112,9 +104,8 @@ function CompoundsPage(props) {
         molsetRef={molsetRef}
         response={response}
         setResponse={setResponse}
-        smiles={smiles}
-        setSmiles={setSmiles}
-        scope={"set"}
+        scope={"sets"}
+        key={mode}
       />
       <ObjectGroupsList
         {...props}

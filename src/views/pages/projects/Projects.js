@@ -47,11 +47,11 @@ function Projects(props) {
   const [mode, setMode] = useState('');
   const [open, setOpen] = useState(false);
   const [response, setResponse] = useState({});
-  const [smiles, setSmiles] = useState(null)
+  // const [smiles, setSmiles] = useState(null)
 
   function reset() {
     setResponse({})
-    setSmiles(null)
+    // setSmiles(null)
   }
 
   function onSimilarity() {
@@ -68,6 +68,12 @@ function Projects(props) {
 
   function onSmarts() {
     setMode('smarts');
+    setOpen(true);
+    reset()
+  }
+
+  function onInchiKey() {
+    setMode('inchikey');
     setOpen(true);
     reset()
   }
@@ -103,6 +109,7 @@ function Projects(props) {
         onSimilarity={onSimilarity}
         onSubstructure={onSubstructure}
         onSmarts={onSmarts}
+        onInchiKey={onInchiKey}
       />
     );
   }
@@ -151,9 +158,10 @@ function Projects(props) {
         setOpen={setOpen}
         response={response}
         setResponse={setResponse}
-        smiles={smiles}
-        setSmiles={setSmiles}
-        scope={"project"}
+        // smiles={smiles}
+        // setSmiles={setSmiles}
+        scope={"projects"}
+        key={mode}
       />
       {creating ? (
         <div>Loading...</div>

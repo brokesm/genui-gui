@@ -1,6 +1,7 @@
 import { Button, CardHeader } from 'reactstrap';
 
-function Scope({ providers, excluded, setExcluded }) {
+function Scope(props) {
+  const {providers, excluded, setExcluded} = props
 
   const onExclude = (item) => {
     setExcluded((prev) => (prev.includes(item) ? prev : [...prev, item]));

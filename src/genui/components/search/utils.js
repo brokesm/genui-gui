@@ -1,13 +1,10 @@
-export async function generateImage(queryRef) {
-  const smiles = await window.ketcher.getSmiles()
-  await window.ketcher
+export async function generateImage(queryRef, smiles) {
+  const blob = await window.ketcher
     .generateImage(smiles, {
       outputFormat: 'svg'
     })
-    .then((blob) => {
-      const objectURL = URL.createObjectURL(blob);
-      queryRef.current.src = objectURL;
-    });
+  const objectURL = URL.createObjectURL(blob)
+  queryRef.current.src = objectURL
 }
 
 export async function getSmartsPattern() {

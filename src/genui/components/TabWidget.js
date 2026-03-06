@@ -87,7 +87,8 @@ function TabWidget(props) {
                       smiles={triplet(tab.title).smiles}
                       setSmiles={(smiles) => setTriplet(tab.title, { smiles })}
                       searchAccrossMultipleSets={false}
-                      scope={"set"}
+                      scope={"sets"}
+                      key={tab.title.toLowerCase()}
                     />
                   ) : (
                     <Component {...props} />

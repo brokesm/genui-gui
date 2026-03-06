@@ -148,7 +148,7 @@ export default function CompoundList(props) {
     const ids = providers.map((item) => item.id);
     const mode = tab === 'Similars' ? 'similarity' : 'substructure';
     try {
-      const resp = await fetch(props.apiUrls.searchRoot + `project/${mode}/`, {
+      const resp = await fetch(props.apiUrls.searchRoot + `projects/${mode}/`, {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         method: 'POST',
@@ -186,7 +186,7 @@ export default function CompoundList(props) {
             mol={mol}
             activeTabs={activeTabs}
             setActiveTabs={setActiveTabs}
-            scope="set"
+            scope="sets"
             providers={providers}
             mode="info"
             viewInModal={viewInModal}
@@ -200,7 +200,7 @@ export default function CompoundList(props) {
                     mol={mol}
                     activeTabs={modalActiveTabs}
                     setActiveTabs={setModalActiveTabs}
-                    scope="project"
+                    scope="projects"
                     providers={modalProviders}
                     mode={modalMode}
                     key={`modal_${mol.id}`}

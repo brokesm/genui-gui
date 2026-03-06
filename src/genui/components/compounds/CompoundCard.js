@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MoleculePic } from './details/MoleculeImage';
 import { CardImg, Col, Row, Card, CardBody, Nav, NavLink, NavItem, Spinner } from 'reactstrap';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export function CompoundCardRow(props) {
   const { property, children } = props;
@@ -23,6 +23,7 @@ export function CompoundCardRow(props) {
 
 function CompoundCardContainer(props) {
   const { children, mol } = props;
+
   return (
     <Card>
       <CardBody>
@@ -39,13 +40,12 @@ function CompoundCardContainer(props) {
   );
 }
 
+//could use better approach, right now race conditions related problems may occurr
 function NavigateButton(props) {
-
   const {children, projectId, setId } = props;
-  const navigate = useNavigate();
 
   return (
-    <button
+    <Link
       style={{
         background: 'transparent',
         cursor: 'pointer',
@@ -54,10 +54,14 @@ function NavigateButton(props) {
         border: 'none',
         padding: 0,
       }}
-      onClick={() => navigate('/projects/' + projectId + '/compounds', { state: { isOpen: setId } })}
+      to={{ pathname: '/projects/' + projectId + '/compounds' }}
+      // distinguishing by projectId here is important, otherwise the app may crash when navigating to two molsets each in different project by overwriting the stored state before the useEffect executes
+      onMouseDown={() => localStorage.setItem(`isOpen_${projectId}`,setId)}
+      target='_blank'
+      rel="noopener noreferrer"
     >
       {children}
-    </button>
+    </Link>
   );
 }
 
@@ -71,12 +75,10 @@ export function A({ href, children }) {
 
 export function InfoCard(props) {
   const { mol, providers, scope, mode } = props;
-  const navigate = useNavigate()
   //const info = Object.keys(mol).filter((key) => typeof mol[key] !== 'object' && !Array.isArray(mol[key]));
-
   const info = ['smiles', 'inchi', 'inchiKey'];
   if (mode === 'similarity') info.push('similarity');
-  const providerArray = scope === 'project' ? 'project_ids' : 'providers';
+  //const providerArray = scope === 'projects' ? 'project_ids' : 'providers';
 
   function transformWord(word) {
     const transformWord = {
@@ -101,15 +103,17 @@ export function InfoCard(props) {
       <CompoundCardRow property={'Found in'}>
         {mol?.occurrence ? (mol.occurrence.map(project => (
           project.providers.map(provider => (
-            <>
+            <div className="d-flex gap-2">
               <NavigateButton
                 {...props}
                 setId={provider.id}
                 projectId={project.id}
               >
                 {provider.name + " – " + project.name}
-              </NavigateButton><br/>
-            </>
+              </NavigateButton>
+              {props?.currentProject && props?.item?.id === provider?.id && (<div>(This set)</div>)}
+              <br/>
+            </div>
           ))
         ))) : (<></>)}
       </CompoundCardRow>
@@ -216,11 +220,12 @@ export function DetailsCard(props) {
 }
 
 export default function CompoundCard(props) {
+  const { mol, activeTabs, setActiveTabs, scope, providers, mode, viewInModal } = props;
   const [activities, setActivities] = useState([]);
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { mol, activeTabs, setActiveTabs, scope, providers, mode, viewInModal } = props;
   const [molWithOccurrence, setMolWithOccurrence] = useState(mol)
+
 
   const options = {
     headers: { 'Content-Type': 'application/json' },
@@ -228,13 +233,6 @@ export default function CompoundCard(props) {
     method: 'GET',
   };
 
-  const activsFromLS = JSON.parse(localStorage.getItem(`activities_${mol.id}`));
-  const propsFromLS = JSON.parse(localStorage.getItem(`properties_${mol.id}`));
-
-  if (activsFromLS && propsFromLS && activities.length === 0 && Object.keys(properties).length === 0) {
-    setActivities(activsFromLS);
-    setProperties(propsFromLS);
-  }
 
   async function fetchExtraArgs(activity) {
     const assayId = activity.extraArgs?.assay;
@@ -266,7 +264,6 @@ export default function CompoundCard(props) {
     setActiveTabs((prev) => ({ ...prev, [compoundId]: tab }));
 
     if (tab !== 'Details') return;
-    if (activities.length !== 0 && Object.keys(properties).length !== 0) return;
 
     setIsLoading(true);
 
@@ -295,14 +292,12 @@ export default function CompoundCard(props) {
     setActivities(activs);
     setProperties(compound.properties);
 
-    localStorage.setItem(`activities_${compoundId}`, JSON.stringify(activs));
-    localStorage.setItem(`properties_${compoundId}`, JSON.stringify(compound.properties));
   }
 
 
   useEffect(() => {
     async function getOccurrence() {
-      const resp = await fetch(props.apiUrls.searchRoot + "inchikey/", {
+      const resp = await fetch(props.apiUrls.searchRoot + "occurrence/inchikey/", {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         method: 'POST',
