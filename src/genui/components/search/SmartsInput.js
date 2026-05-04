@@ -53,6 +53,11 @@ export default function SmartsInput(props) {
       // reason for multiple scheduled GET requests untill it returns the expected object
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const resp = await fetch(`${smartsView}?job_id=${jobId}`);
+        if (!resp.ok) {
+          setError('Invalid SMARTS string');
+          setIsLoading(false);
+          return;
+        }
         const job = await resp.json();
         if (job?.result?.error) {
           const err = new Error(resp.result.error);
@@ -62,6 +67,12 @@ export default function SmartsInput(props) {
         if (job?.result?.image) {
           const dataUrl = 'data:image/png;base64,' + job.result.image;
           setVisualization(dataUrl);
+          setIsLoading(false);
+          return;
+        }
+
+        if (attempt === 49) {
+          setError('Took too long to respond. Check your internet connection');
           setIsLoading(false);
           return;
         }

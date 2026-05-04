@@ -50,7 +50,6 @@ export default function QueryCard(props) {
   }
 
   useEffect(() => {
-    // sometimes this generates duplicated structure, don't know why - perhaps solved?
     if (response && mode !== 'smarts') generateImage(queryRef, smiles)
   }, [response, queryRef, smiles]);
 
